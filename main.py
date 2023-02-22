@@ -3,6 +3,7 @@ from docxtpl import DocxTemplate
 from docx import Document
 from docxcompose.composer import Composer
 from docx.opc.exceptions import PackageNotFoundError
+from docx.shared import Cm
 
 def merge(doc_final):
     #prepara o doc final para o merge
@@ -30,7 +31,7 @@ def main():
         i = 1
         while (i <= n):
             #le uma linha 
-            df = pd.read_excel(xls, header = 0, skiprows = [j for j in range(1,i)], nrows=1,  usecols= 'A:G')
+            df = pd.read_excel(xls, header = 0, skiprows = [j for j in range(1,i)], nrows=1,  usecols= 'A:H')
             #transforma o dataframe em dicionario com lista
             data = df.to_dict('list')
             #pega a lista de chaves (cabeçalho da planilha) para o contexto do template
@@ -39,7 +40,7 @@ def main():
             if (i < n):
                 #le outra linha
                 i += 1
-                df2 = pd.read_excel(xls, header = 0, skiprows = [j for j in range(1,i)], nrows=1,  usecols= 'A:G')
+                df2 = pd.read_excel(xls, header = 0, skiprows = [j for j in range(1,i)], nrows=1,  usecols= 'A:H')
                 data2 = df2.to_dict('list')
                 #monta o contexto
                 context = {
@@ -50,6 +51,7 @@ def main():
                     keys[4]: data[keys[4]][0],
                     keys[5]: data[keys[5]][0],
                     keys[6]: data[keys[6]][0],
+                    keys[7]: data[keys[7]][0],
                     keys[0]+"_": data2[keys[0]][0],
                     keys[1]+"_": data2[keys[1]][0],
                     keys[2]+"_": data2[keys[2]][0],
@@ -57,6 +59,7 @@ def main():
                     keys[4]+"_": data2[keys[4]][0],
                     keys[5]+"_": data2[keys[5]][0],
                     keys[6]+"_": data2[keys[6]][0],
+                    keys[7]+"_": data2[keys[7]][0],
                 }
             #se a iteração for a última, não le outra linha
             else :
@@ -68,13 +71,23 @@ def main():
                     keys[4]: data[keys[4]][0],
                     keys[5]: data[keys[5]][0],
                     keys[6]: data[keys[6]][0],
+                    keys[7]: data[keys[7]][0],
                 }
-            #monta e salva um doc temporário a partir do template com o contexto
+            #renderiza e salva um doc temporário a partir do template com o contexto
             doc.render(context)
             doc.save("docx_rendered.docx")
             #faz merge com o doc final
             merge(doc_final)
             i += 1
+
+        #Ajuste das margens do arquivo após o final do processo
+        sections = doc_final.sections
+        for section in sections:
+            section.top_margin = Cm(0.1)
+            section.bottom_margin = Cm(0.1)
+            section.left_margin = Cm(0.5)
+            section.right_margin = Cm(0.5)
+        doc_final.save('declaracao.docx')
 
     except PackageNotFoundError:
         print('Erro ao abrir o arquivo. O arquivo pode estar corrompido.')
