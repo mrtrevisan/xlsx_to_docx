@@ -1,0 +1,8 @@
+.Ds_Store
+.vscode/*
+*.doc
+*.docx
+*.xls
+*.xlsx
+*.xlsm
+*.csv
