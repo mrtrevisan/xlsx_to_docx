@@ -4,17 +4,27 @@ from docx import Document
 from docxcompose.composer import Composer
 from docx.opc.exceptions import PackageNotFoundError
 from docx.shared import Cm
+import math
 
 def merge(doc_final):
     #prepara o doc final para o merge
     composer = Composer(doc_final)
     #abre o doc temporário
-    doc_merge = Document('./docx_rendered.docx')
+    doc_merge = Document('docx_rendered.docx')
     #faz merge e salva o doc final
     composer.append(doc_merge)
     composer.save("declaracao.docx")
 
-def main():
+def merge_dest(doc_final):
+    #prepara o doc final para o merge
+    composer = Composer(doc_final)
+    #abre o doc temporário
+    doc_merge = Document('destinatarios_rendered.docx')
+    #faz merge e salva o doc finals
+    composer.append(doc_merge)
+    composer.save("destinatarios_camiseta.docx")
+
+def monta_declaracao():
     try:
         #abre um documento final
         doc_final = Document()
@@ -91,6 +101,70 @@ def main():
 
     except PackageNotFoundError:
         print('Erro ao abrir o arquivo. O arquivo pode estar corrompido.')
+
+def monta_destinatario():
+    try:
+        doc_final = Document()
+        doc_final.save('destinatarios_camiseta.docx')
+        doc = DocxTemplate('destinatarios_template.docx')
+        xls = pd.ExcelFile("xls_data.xlsx")
+
+        df = pd.read_excel(xls)
+        n = len(df.index)
+
+        n_pag = math.floor(n / 10)
+        n_rest = n % 10
+    
+        #enquanto houverem linhas não tratadas na panilha 
+        i = 0
+        while (i < n_pag):
+            df = pd.read_excel(xls, header = 0, skiprows = [j for j in range(1, i*10+1)], nrows=10,  usecols= 'A:H')
+            data = df.to_dict('list')
+            keys = list(data)
+            context_acumulado = {}
+            for j in range(10):
+                context = {
+                    str(keys[0])+str(j): data[keys[0]][j],
+                    str(keys[1])+str(j): data[keys[1]][j],
+                    str(keys[2])+str(j): data[keys[2]][j],
+                    str(keys[3])+str(j): data[keys[3]][j],
+                    str(keys[4])+str(j): data[keys[4]][j],
+                    str(keys[5])+str(j): data[keys[5]][j],
+                    str(keys[6])+str(j): data[keys[6]][j],
+                    str(keys[7])+str(j): data[keys[7]][j],
+                }
+                context_acumulado.update(context)
+            doc.render(context_acumulado)
+            doc.save("destinatarios_rendered.docx")
+            merge_dest(doc_final)
+            i += 1
+        else :
+            df = pd.read_excel(xls, header = 0, skiprows = [j for j in range(1, i*10+1)], nrows = n_rest,  usecols= 'A:H')
+            data = df.to_dict('list')
+            keys = list(data)
+            context_acumulado = {}
+            for j in range(n_rest):
+                context = {
+                    str(keys[0])+str(j): data[keys[0]][j],
+                    str(keys[1])+str(j): data[keys[1]][j],
+                    str(keys[2])+str(j): data[keys[2]][j],
+                    str(keys[3])+str(j): data[keys[3]][j],
+                    str(keys[4])+str(j): data[keys[4]][j],
+                    str(keys[5])+str(j): data[keys[5]][j],
+                    str(keys[6])+str(j): data[keys[6]][j],
+                    str(keys[7])+str(j): data[keys[7]][j],
+                }
+                context_acumulado.update(context)
+            doc.render(context_acumulado)
+            doc.save("destinatarios_rendered.docx")
+            merge_dest(doc_final)
+
+    except PackageNotFoundError:
+        print('Erro ao abrir o arquivo. O arquivo pode estar corrompido.')
+
+def main():
+    monta_declaracao()
+    monta_destinatario()
 
 if __name__ == "__main__":
     main()
