@@ -10,25 +10,25 @@ def merge(doc_final):
     #prepara o doc final para o merge
     composer = Composer(doc_final)
     #abre o doc temporário
-    doc_merge = Document('docx_rendered.docx')
+    doc_merge = Document('temp/docx_rendered.docx')
     #faz merge e salva o doc final
     composer.append(doc_merge)
-    composer.save("declaracao.docx")
+    composer.save("out/declaracao.docx")
 
 def merge_dest(doc_final):
     #prepara o doc final para o merge
     composer = Composer(doc_final)
     #abre o doc temporário
-    doc_merge = Document('destinatarios_rendered.docx')
+    doc_merge = Document('temp/destinatarios_rendered.docx')
     #faz merge e salva o doc finals
     composer.append(doc_merge)
-    composer.save("destinatarios_camiseta.docx")
+    composer.save("out/destinatarios.docx")
 
 def monta_declaracao():
     try:
         #abre um documento final
         doc_final = Document()
-        doc_final.save('declaracao.docx')
+        doc_final.save('out/declaracao.docx')
         #abre o template
         doc = DocxTemplate('docx_template.docx')
         #abre a planilha de dados 
@@ -85,7 +85,7 @@ def monta_declaracao():
                 }
             #renderiza e salva um doc temporário a partir do template com o contexto
             doc.render(context)
-            doc.save("docx_rendered.docx")
+            doc.save("temp/docx_rendered.docx")
             #faz merge com o doc final
             merge(doc_final)
             i += 1
@@ -97,7 +97,7 @@ def monta_declaracao():
             section.bottom_margin = Cm(0.1)
             section.left_margin = Cm(0.5)
             section.right_margin = Cm(0.5)
-        doc_final.save('declaracao.docx')
+        doc_final.save('out/declaracao.docx')
 
     except PackageNotFoundError:
         print('Erro ao abrir o arquivo. O arquivo pode estar corrompido.')
@@ -105,15 +105,15 @@ def monta_declaracao():
 def monta_destinatario():
     try:
         doc_final = Document()
-        doc_final.save('destinatarios_camiseta.docx')
+        doc_final.save('out/destinatarios.docx')
         doc = DocxTemplate('destinatarios_template.docx')
         xls = pd.ExcelFile("xls_data.xlsx")
 
         df = pd.read_excel(xls)
         n = len(df.index)
 
-        n_pag = math.floor(n / 10)
-        n_rest = n % 10
+        n_pag = math.floor(n / 5)
+        n_rest = n % 5
     
         #enquanto houverem linhas não tratadas na panilha 
         i = 0
@@ -122,7 +122,7 @@ def monta_destinatario():
             data = df.to_dict('list')
             keys = list(data)
             context_acumulado = {}
-            for j in range(10):
+            for j in range(5):
                 context = {
                     str(keys[0])+str(j): data[keys[0]][j],
                     str(keys[1])+str(j): data[keys[1]][j],
@@ -135,7 +135,7 @@ def monta_destinatario():
                 }
                 context_acumulado.update(context)
             doc.render(context_acumulado)
-            doc.save("destinatarios_rendered.docx")
+            doc.save("temp/destinatarios_rendered.docx")
             merge_dest(doc_final)
             i += 1
         else :
@@ -156,7 +156,7 @@ def monta_destinatario():
                 }
                 context_acumulado.update(context)
             doc.render(context_acumulado)
-            doc.save("destinatarios_rendered.docx")
+            doc.save("temp/destinatarios_rendered.docx")
             merge_dest(doc_final)
 
     except PackageNotFoundError:
@@ -165,6 +165,6 @@ def monta_destinatario():
 def main():
     monta_declaracao()
     monta_destinatario()
-    #oi
+    
 if __name__ == "__main__":
     main()
